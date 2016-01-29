@@ -1,10 +1,8 @@
 # Introduction
 
-## Overview
+`time-capture` is a small Go (Golang) library with tools for capturing the duration of
+function calls and sequencing periodic events.
 
-## Installation
-
-## Usage
 
 ## License
 

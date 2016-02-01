@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"fmt"
-	. "github.schq.secious.com/Logrhythm/Godeps/_workspace/src/github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"os"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTimeCapture(t *testing.T) {

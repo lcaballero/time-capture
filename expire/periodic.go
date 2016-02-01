@@ -1,6 +1,8 @@
 package expire
 
-import "time"
+import (
+	"time"
+)
 
 // An Periodic is a combination of a ticker and utility functions
 // determining when to do extra work, and when to stream/flush
@@ -24,7 +26,7 @@ type Periodic struct {
 func New(recheckMs, overdueMs, fuzzMs time.Duration) *Periodic {
 	recheck, overdue, fuzz :=
 		recheckMs*time.Millisecond,
-		overdueMs*time.Second,
+		overdueMs*time.Millisecond,
 		fuzzMs*time.Millisecond
 	tic := time.NewTicker(recheck)
 	bell := &Periodic{
@@ -41,8 +43,16 @@ func New(recheckMs, overdueMs, fuzzMs time.Duration) *Periodic {
 	go func() {
 		for {
 			select {
-			case bell.time = <-bell.c:
-				bell.C <- bell.time
+			case currTime := <-bell.c:
+				now := currTime.UnixNano()
+				delta := now - bell.last
+				lower := bell.overdue - bell.fuzz
+				upper := bell.overdue + bell.fuzz
+				isOverdue := lower < time.Duration(delta) && time.Duration(delta) < upper
+				if isOverdue {
+					bell.last = now
+					bell.C <- currTime
+				}
 			case <-bell.done:
 				return
 			}
@@ -61,14 +71,6 @@ func (e *Periodic) Stop() {
 	e.stopped = true
 	e.ticker.Stop()
 	e.done <- true
-}
-
-// Determines if more time the the overdue duration has elapsed.
-func (e *Periodic) IsOverdue() bool {
-	now := e.time.UnixNano()
-	delta := e.last - now
-
-	return time.Duration(delta) < (e.overdue + e.fuzz)
 }
 
 // Reset starts the expiration period over.
